@@ -40,6 +40,7 @@ class Conversations extends Component {
     return (
       <ListView dataSource={this.ds.cloneWithRows(this.props.threads)}
                 renderRow={this.renderRow}
+                enableEmptySections
       />
     
     );
@@ -65,7 +66,7 @@ const styles = StyleSheet.create({
 const THREADS_QUERY = gql`
   query threads {
     threads {
-      id
+      _id
       title
       handle
       lastMessageTime

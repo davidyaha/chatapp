@@ -23,12 +23,12 @@ class Conversation extends Component {
 const SEND_MESSAGE_MUTATION = gql`
   mutation sendMessage($message: MessageInput!) {
     sendMessage(message: $message) {
-      id
+      _id
       text
       createdAt
       arrivedAt
       user {
-        id
+        _id
         name
         avatar
       }
@@ -56,13 +56,13 @@ const ConversationWithMutation = graphql(SEND_MESSAGE_MUTATION, {
         __typename: 'Mutation',
         sendMessage: {
           __typename: 'Message',
-          id: message._id || 'tempId' + dateTime,
+          _id: message._id || 'tempId' + dateTime,
           text: message.text,
           createdAt: dateTime,
           arrivedAt: dateTime + 1,
           user: {
             __typename: 'User',
-            id: ownProps.user._id,
+            _id: ownProps.user._id,
             name: ownProps.user.name,
             avatar: ownProps.user.avatar,
           },
@@ -89,13 +89,13 @@ const ConversationWithMutation = graphql(SEND_MESSAGE_MUTATION, {
 })(Conversation);
 
 const MESSAGES_QUERY = gql`
-  query messages($conversationHandle: String!) {
+  query messages($conversationHandle: ID!) {
     messages(handle: $conversationHandle) {
-      id
+      _id
       text
       createdAt
       user {
-        id
+        _id
         name
         avatar
       }
@@ -104,7 +104,7 @@ const MESSAGES_QUERY = gql`
       }
     }
     me {
-      id
+      _id
       name
       avatar
     }
@@ -120,11 +120,7 @@ const ConversationWithMutationAndData = graphql(MESSAGES_QUERY, {
     const transformedMessages = messages &&
       messages.map(message => ({
           ...message,
-          _id: message.id,
           createdAt: new Date(message.createdAt),
-          user: {
-            _id: message.user.id,
-          }
         })
       );
     
@@ -132,7 +128,7 @@ const ConversationWithMutationAndData = graphql(MESSAGES_QUERY, {
       isLoadingEarlier: loading,
       messages: transformedMessages || [],
       user: {
-        _id: me && me.id || '1',
+        _id: me && me._id || '1',
         name: me && me.name,
         avatar: me && me.avatar,
       }
