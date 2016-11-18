@@ -1,23 +1,8 @@
-import User, {Users} from './user';
-import Channel, {Channels} from './channel';
-
-import {Observable} from 'rxjs/Observable';
-
-// Schema
-
-const userEvent = `
-  type UserEvent {
-    # The user binded to the event
-    user: User!
-    
-    # Epoch time of event happening
-    datetime: Float!
-  }
-`;
+import {idResolver} from '../common-resolvers';
 
 const messageFields = `
   # Unique identifier for the message 
-  _id: ID!
+  id: ID!
   
   # Content of the message
   text: String!
@@ -85,32 +70,24 @@ const messageInput = `
   }
 `;
 
-export default () => [message, imageMessage, messageInput, userEvent, User, Channel];
-
-// Model
-
-export class Messages {
-  constructor({connector}) {
-    this.messages = connector.map(db => db.collection('messages')).share();
-    this.users = new Users({connector});
-    this.channels = new Channels({connector});
-  }
+export const typeDef = `
+  ${message}
   
-  getMessagesForHandle(channelId, viewer) {
-    return this.channels.getChannelByHandleAndUser(channelId, viewer).flatMap(
-      this.messages.flatMap(messages =>
-        Observable.fromPromise(
-          messages.find({sentOn: channelId}, {limit: 30}).toArray()
-        )
-      )
-    )
-  }
-  
-  addMessage(message, user) {
-    return this.messages.flatMap(messages =>
-      Observable.fromPromise(
-        messages.insert({...message, user, arrivedAt: Date.now()})
-      )
-    ).map(result => result && result.ops && result.ops[0]);
-  }
-}
+  ${imageMessage}
+
+  ${messageInput}
+`;
+
+const sharedMessageResolvers = {
+  id: idResolver,
+};
+
+export const resolver = {
+  Message: {
+    __resolveType(message, ctx, info) {
+      return message.imageUrl ? 'ImageMessage' : 'PlainMessage';
+    },
+  },
+  PlainMessage: Object.assign({}, sharedMessageResolvers),
+  ImageMessage: Object.assign({}, sharedMessageResolvers),
+};

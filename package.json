@@ -1,0 +1,23 @@
+{
+  "name": "chatapp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "gql": "cd chatapp-server && npm start",
+    "app": "cd chatapp && npm start",
+    "app:ios": "cd chatapp && react-native run-ios",
+    "app:refresh": "cd chatapp && rm -rf node_modules/chatapp-chat && npm i",
+    "app:link-libs": "cd chatapp && npm link ../chatapp-chat/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidyaha/chatapp.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/davidyaha/chatapp/issues"
+  },
+  "homepage": "https://github.com/davidyaha/chatapp#readme"
+}

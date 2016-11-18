@@ -1,37 +1,37 @@
-import {MongoClient} from 'mongodb';
+import {MongoClient, Db} from 'mongodb';
 import {Observable} from 'rxjs';
 
-const dbConnection = new Observable(observer => {
+export const mongoConnector = new Observable(observer => {
+  console.log('Trying to connect.');
+  let dbRef: Db;
+  
   MongoClient.connect('mongodb://localhost:27017/chat', (err, db) => {
-    
     if (err) {
-      console.log(err);
       observer.error(err);
     }
     
     if (db) {
+      dbRef = db;
       observer.next(db);
       
       db.on('close', (err) => {
-        console.log(err);
         observer.error(err || new Error('Socket closed unexpectedly'));
       });
       
       db.on('timeout', (err) => {
-        console.log(err);
         observer.error(err || new Error('Socket timed out'));
       });
     }
     
-    return () => {
-      db.close();
-    }
   });
-}).publishReplay().refCount().retry();
+  
+  return () => {
+    dbRef && dbRef.close();
+  }
+}).retryWhen(error => error.delay(1000)).publishReplay().refCount();
 
-dbConnection.subscribe(
+mongoConnector.subscribe(
   () => console.log('Connected to mongo'),
+  console.error.bind(console),
   () => console.log('Released connection to mongo')
 );
-
-export default dbConnection;
