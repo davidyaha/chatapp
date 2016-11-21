@@ -1,13 +1,15 @@
 import {idResolver} from '../common-resolvers';
+import {IResolverContext} from '../../main';
 
 export const typeDef = `
   type User {
     id: ID!
     name: String
     lastName: String
+    username: String
     email: String
     avatar: String
-    threads: [Channel]!
+    channels: [Channel]
   }
   
   input UserInput {
@@ -18,7 +20,6 @@ export const typeDef = `
   }
   
   type Token {
-    userId: ID!
     token: String!
   }
 `;
@@ -26,5 +27,8 @@ export const typeDef = `
 export const resolver = {
   User: {
     id: idResolver,
+    channels(user, args, ctx: IResolverContext) {
+      return ctx.channelModel.getChannelsByUser(user._id).take(1).toPromise();
+    },
   },
 };

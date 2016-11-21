@@ -1,5 +1,5 @@
 import {Observable} from 'rxjs';
-import {Collection} from 'mongodb';
+import {Collection, ObjectID} from 'mongodb';
 import {extractInsertResult} from '../connectors/mongo-utils';
 
 export class ChannelModel {
@@ -7,62 +7,64 @@ export class ChannelModel {
     this.channels = connector.map(db => db.collection('channels'));
   }
   
-  getChannelByHandleAndUser(channelId: string, userId: string): Observable<any> {
+  public getChannelByHandleAndUser(channelId: string, userId: string): Observable<any> {
+    return this.getOneChannel({_id: new ObjectID(channelId), members: userId});
+  }
+  
+  public getChannelById(channelId: string): Observable<any> {
+    return this.getOneChannel({_id: new ObjectID(channelId)});
+  }
+  
+  public getChannelsByUser(userId: string, skip = 0, limit = 30) {
     return this.channels.flatMap(
       collection =>
         Observable.fromPromise(
-          collection.findOne({_id: channelId, members: userId})
+          collection.find({members: userId}).skip(0).limit(limit).toArray()
         )
     );
   }
   
-  getChannelById(channelId: string): Observable<any> {
-    return this.channels.flatMap(
-      collection =>
-        Observable.fromPromise(
-          collection.findOne({_id: channelId})
-        )
-    );
-  }
-  
-  getChannelsByUser(userId: string) {
-    return this.channels.flatMap(
-      collection =>
-        Observable.fromPromise(
-          collection.findOne({members: userId})
-        )
-    );
-  }
-  
-  createChannel(channel) {
+  public createChannel(channel: any, userId: string): Observable<any> {
+    return this.channels
+               .flatMap(modifyCollection.bind(this))
+               .map(extractInsertResult);
+    
     function modifyCollection(collection: Collection): Observable<any> {
-      const doc = Object.assign({}, channel, {
-        handle: channel.handle || this.createHandleFromTitle(channel.title),
-        members: []
-      });
-      
+      const doc = Object.assign({},
+        channel,
+        {
+          handle: channel.handle || this.createHandleFromTitle(channel.title),
+          members: [userId],
+        }
+      );
+  
       return Observable.fromPromise(collection.insertOne(doc));
     }
-    
-    return this.channels
-               .flatMap(modifyCollection)
-               .flatMap(extractInsertResult);
   }
   
-  addUserToChannel(channelId, userId) {
-    function modifyCollection(collection: Collection): Observable<any> {
-      const selector = {_id: channelId};
-      const modifier = {members: {$push: userId}};
-      
-      return Observable.fromPromise(collection.updateOne(selector, modifier));
-    }
-    
+  public addUserToChannel(channelId, userId) {
     return this.channels
                .flatMap(modifyCollection)
                .flatMap(() => this.getChannelById(channelId));
+    
+    function modifyCollection(collection: Collection): Observable<any> {
+      console.log(userId);
+      const selector = {_id: new ObjectID(channelId)};
+      const modifier = {$addToSet: {members: userId}};
+  
+      return Observable.fromPromise(collection.updateOne(selector, modifier));
+    }
   }
   
-  createHandleFromTitle(title) {
+  private getOneChannel(selector): Observable<any> {
+    return this.channels.flatMap(getFromCollection);
+  
+    function getFromCollection(collection: Collection): Observable<any> {
+      return Observable.fromPromise(collection.find(selector).limit(1).next())
+    }
+  }
+  
+  private createHandleFromTitle(title) {
     return title.toLowerCase().split(' ').join('_');
   }
   

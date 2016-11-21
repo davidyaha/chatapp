@@ -7,6 +7,7 @@ export const mongoConnector = new Observable(observer => {
   
   MongoClient.connect('mongodb://localhost:27017/chat', (err, db) => {
     if (err) {
+      console.log(err);
       observer.error(err);
     }
     
@@ -28,10 +29,10 @@ export const mongoConnector = new Observable(observer => {
   return () => {
     dbRef && dbRef.close();
   }
-}).retryWhen(error => error.delay(1000)).publishReplay().refCount();
+}).retryWhen(error => error.delay(1000)).publishReplay(1).refCount();
 
 mongoConnector.subscribe(
   () => console.log('Connected to mongo'),
-  console.error.bind(console),
+  (error) => console.log(error),
   () => console.log('Released connection to mongo')
 );

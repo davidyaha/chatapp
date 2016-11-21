@@ -10,9 +10,12 @@ import * as UserEvent from './chat/user-event.type';
 
 const modules = [Query, Mutation, Subscription, User, Message, Channel, UserEvent];
 
-const resolvers = Object.assign({}, ...(modules.map((m) => m.resolver).filter((res) => !!res)));
+// Creating an array of strings from the modules typeDef field
+const typeDefs = modules.map(m => m.typeDef).filter(res => !!res);
 
-const typeDefs = modules.map((m) => m.typeDef).filter((res) => !!res);
+// Creating a map of resolvers from the modules resolver field
+const resolverCollection = modules.map(m => m.resolver).filter(res => !!res);
+const resolvers = Object.assign({}, ...resolverCollection);
 
 const logger = console;
 

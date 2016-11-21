@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "gql": "cd chatapp-server && npm start",
+    "gql": "cd chatapp-server && npm run start:watch",
     "app": "cd chatapp && npm start",
     "app:ios": "cd chatapp && react-native run-ios",
     "app:refresh": "cd chatapp && rm -rf node_modules/chatapp-chat && npm i",

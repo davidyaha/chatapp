@@ -1,4 +1,5 @@
 import {idResolver} from '../common-resolvers';
+import {IResolverContext} from '../../main';
 
 const messageFields = `
   # Unique identifier for the message 
@@ -11,7 +12,7 @@ const messageFields = `
   createdAt: Float!
   
   # The user that sent the message
-  user: User!
+  creator: User!
   
   # channel or thread where the message was sent on
   sentOn: Channel!
@@ -80,6 +81,9 @@ export const typeDef = `
 
 const sharedMessageResolvers = {
   id: idResolver,
+  creator(message, args, ctx: IResolverContext) {
+    return ctx.userModel.getUserById(message.creatorId).take(1).toPromise();
+  }
 };
 
 export const resolver = {

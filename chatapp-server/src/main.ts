@@ -23,6 +23,7 @@ export interface IMainOptions {
 }
 
 export interface IResolverContext {
+  user?: any;
   userModel: UserModel;
   messageModel: MessageModel;
   channelModel: ChannelModel;
@@ -36,26 +37,30 @@ function verbosePrint(port, enableGraphiql) {
   }
 }
 
+const connector = mongoConnector;
+const users = new UserModel({connector});
+const context: IResolverContext = {
+  userModel: users,
+  messageModel: new MessageModel({connector}),
+  channelModel: new ChannelModel({connector}),
+};
+
 function createGraphQLMiddleware(): ExpressHandler {
   return graphqlExpress(req => {
-    const connector = mongoConnector;
-    const users = new UserModel({connector});
     
-    let user;
     const authToken = req.headers['authorization'];
     
-    console.log('getting user for auth token', authToken);
-    
     if (authToken) {
-      user = users.getUserByAuthToken(authToken);
+      console.log('Getting user for auth token', authToken);
+      
+      const observable = users.getUserByAuthToken(authToken).map(user => ({
+        schema: Schema,
+        context: Object.assign(context, {user}),
+      }));
+      
+      return observable.take(1).toPromise();
     }
     
-    const context: IResolverContext | any = {
-      user,
-      Users: users,
-      Messages: new MessageModel({connector}),
-      Channels: new ChannelModel({connector}),
-    };
     return {
       schema: Schema,
       context
