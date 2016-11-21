@@ -55,7 +55,7 @@ function createGraphQLMiddleware(): ExpressHandler {
       
       const observable = users.getUserByAuthToken(authToken).map(user => ({
         schema: Schema,
-        context: Object.assign(context, {user}),
+        context: Object.assign({}, context, {user}),
       }));
       
       return observable.take(1).toPromise();
