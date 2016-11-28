@@ -48,7 +48,6 @@ export class ChannelModel {
                .flatMap(() => this.getChannelById(channelId));
     
     function modifyCollection(collection: Collection): Observable<any> {
-      console.log(userId);
       const selector = {_id: new ObjectID(channelId)};
       const modifier = {$addToSet: {members: userId}};
   

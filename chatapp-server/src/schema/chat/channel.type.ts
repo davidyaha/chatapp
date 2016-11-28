@@ -25,8 +25,8 @@ export const resolver = {
   Channel: {
     id: idResolver,
     members(channel, args, ctx: IResolverContext) {
-      const memberPromises = channel.members.map(memberId => ctx.userModel.getUserById(memberId).take(1).toPromise());
-      return Promise.all(memberPromises);
+      return channel.members
+                    .map(memberId => ctx.userModel.getUserById(memberId).take(1).toPromise());
     },
     numberOfMembers(channel) {
       return channel.members.length;
